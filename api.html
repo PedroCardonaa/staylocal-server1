@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>StayLocal API</title>
+<style>
+body{font-family:Arial,sans-serif;margin:20px}
+pre{background:#1e1e1e;color:#ddd;padding:16px}
+input,button{padding:8px;margin-right:8px}
+</style>
+</head>
+<body>
+<h1>StayLocal API (raw JSON)</h1>
+<a href="index.html">Back to search</a>
+<form id="f">
+<input id="cityIn" placeholder="City" required>
+<button>Get JSON</button>
+</form>
+<pre id="out">Enter a city to see raw JSON.</pre>
+<script>
+const f = document.getElementById('f');
+const out = document.getElementById('out');
+const city = document.getElementById('cityIn');
+f.onsubmit = async function (e) {
+  e.preventDefault();
+  out.textContent = 'Loading...';
+  const url = '/api/search.json?city=' + encodeURIComponent(city.value);
+  try {
+    const r = await fetch(url);
+    const t = await r.text();
+    try {
+      out.textContent = JSON.stringify(JSON.parse(t), null, 2);
+    } catch (x) {
+      out.textContent = t;
+    }
+  } catch (err) {
+    out.textContent = 'Could not reach Server 2: ' + err.message;
+  }
+};
+</script>
+</body>
+</html>
