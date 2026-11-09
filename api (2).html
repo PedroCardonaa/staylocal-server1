@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>StayLocal | API response</title>
+<style>
+:root{
+  --paper:#F1F5F7; --ink:#13232B; --muted:#566872; --line:#D9E2E7;
+  --coral:#EF4458; --coral-dark:#D6314A; --grocery:#2B9A68; --cafe:#D9832A; --focus:#3566CF;
+  font-family:"Avenir Next","Segoe UI Variable Display","Segoe UI",system-ui,-apple-system,"Helvetica Neue",Arial,sans-serif;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-size:16px;line-height:1.5}
+a{color:inherit}
+.wrap{max-width:1120px;margin:0 auto;padding:0 24px}
+:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.bar{border-bottom:1px solid var(--line);background:#fff}
+.bar .wrap{display:flex;align-items:center;justify-content:space-between;height:64px}
+.brand{display:flex;align-items:center;gap:10px;text-decoration:none;font-weight:800;font-size:21px;letter-spacing:-.02em}
+.nav{display:flex;gap:6px}
+.nav a{text-decoration:none;font-weight:650;font-size:15px;padding:8px 14px;border-radius:999px;color:var(--muted)}
+.nav a[aria-current="page"]{background:var(--ink);color:#fff}
+.nav a:not([aria-current="page"]):hover{background:var(--paper);color:var(--ink)}
+.hero{padding-top:44px;padding-bottom:22px}
+h1{margin:0 0 12px;font-size:clamp(30px,4.6vw,46px);line-height:1.06;letter-spacing:-.03em;font-weight:800;max-width:18ch;text-wrap:balance}
+.lede{margin:0 0 26px;max-width:62ch;color:var(--muted);font-size:18px}
+.ask{display:grid;grid-template-columns:1.4fr 1fr auto;background:#fff;border:1px solid var(--line);border-radius:20px;box-shadow:0 10px 30px rgba(19,35,43,.09);overflow:hidden}
+.field{display:flex;flex-direction:column;gap:5px;padding:13px 22px 14px;border-right:1px solid var(--line);min-width:0}
+.field:focus-within{box-shadow:inset 0 0 0 2px var(--focus)}
+.field label{font-size:13px;font-weight:700;color:var(--muted)}
+.field input[type=text],.field input[type=number]{border:0;padding:0;margin:0;font:inherit;font-size:18px;font-weight:650;color:var(--ink);background:transparent;outline:none;width:100%;min-width:0}
+.go{margin:9px;padding:0 28px;border:0;border-radius:13px;background:var(--coral);color:#fff;font:inherit;font-weight:750;font-size:17px;cursor:pointer}
+.go:hover{background:var(--coral-dark)}
+.out{padding-top:6px;padding-bottom:56px}
+.meta{display:flex;flex-wrap:wrap;align-items:center;gap:10px 14px;margin:0 0 14px}
+.req{flex:1 1 360px;min-width:0;font:14px/1.5 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;background:#fff;border:1px solid var(--line);border-radius:12px;padding:10px 14px;overflow-x:auto;white-space:nowrap}
+.req b{color:var(--coral-dark)}
+.chip{display:inline-flex;align-items:center;gap:7px;padding:6px 12px;border-radius:999px;font-size:13px;font-weight:700;background:#fff;border:1px solid var(--line);font-variant-numeric:tabular-nums}
+.chip i{width:8px;height:8px;border-radius:50%;background:var(--muted);display:block}
+.chip.ok i{background:var(--grocery)}
+.chip.wait i{background:var(--cafe)}
+.raw{font-size:14px;font-weight:650;color:var(--muted)}
+.notice{margin:0 0 14px;padding:12px 16px;border-radius:12px;background:#FFF6E8;border:1px solid #F1D9AE;font-size:15px}
+pre{margin:0;padding:22px 24px;border-radius:16px;background:#0F1B21;color:#C9D6DD;font:14px/1.65 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;overflow:auto;max-height:68vh;tab-size:2}
+pre .k{color:#8FB8FF}pre .s{color:#9BE3B5}pre .n{color:#F3B562}pre .b{color:#F08DA0}pre .z{color:#F08DA0}
+@media (max-width:860px){
+  .ask{grid-template-columns:1fr}
+  .field{border-right:0;border-bottom:1px solid var(--line)}
+  .go{margin:14px;padding:15px}
+}
+</style>
+</head>
+<body>
+<header class="bar">
+  <div class="wrap">
+    <a class="brand" href="index.html" aria-label="StayLocal home">
+      <svg width="30" height="30" viewBox="0 0 30 30" aria-hidden="true">
+        <circle cx="15" cy="15" r="13" fill="none" stroke="#13232B" stroke-width="2" stroke-dasharray="3 3"/>
+        <circle cx="15" cy="15" r="7.5" fill="none" stroke="#13232B" stroke-width="2"/>
+        <circle cx="15" cy="15" r="3.6" fill="#EF4458"/>
+      </svg>
+      StayLocal
+    </a>
+    <nav class="nav" aria-label="Main">
+      <a href="index.html">Search</a>
+      <a href="api.html" aria-current="page">API</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <section class="hero wrap">
+    <h1>The same stays, as raw JSON</h1>
+    <p class="lede">This page sends the request the search page sends and shows Server 2&rsquo;s answer exactly as it arrives. Other tools can call this endpoint too.</p>
+    <form class="ask" id="askForm" autocomplete="off">
+      <div class="field">
+        <label for="city">City</label>
+        <input id="city" type="text" value="Austin" required>
+      </div>
+      <div class="field">
+        <label for="max">Price limit per night</label>
+        <input id="max" type="number" min="1" placeholder="No limit">
+      </div>
+      <button class="go" type="submit">Send request</button>
+    </form>
+  </section>
+
+  <section class="out wrap" aria-label="API response">
+    <div class="meta">
+      <div class="req" id="req"></div>
+      <span class="chip" id="status"><i></i><span id="statusText">Waiting</span></span>
+      <span class="chip" id="time"><i></i><span id="timeText">0 ms</span></span>
+      <a class="raw" id="rawLink" href="#" target="_blank" rel="noopener">Open the raw response</a>
+    </div>
+    <p class="notice" id="notice" hidden></p>
+    <pre id="json" aria-live="polite" tabindex="0">Sending request...</pre>
+  </section>
+</main>
+
+<script>
+(function(){
+  var SAMPLE=[
+    {id:"s1",name:"Sunny bungalow near Zilker Park",neighbourhood:"Zilker",room_type:"Entire home/apt",price:189,rating:4.92,cafes:7,groceries:2,transit:3},
+    {id:"s2",name:"Garden room with a private entrance",neighbourhood:"East Cesar Chavez",room_type:"Private room",price:96,rating:4.81,cafes:11,groceries:3,transit:4},
+    {id:"s3",name:"Modern loft above Rainey Street",neighbourhood:"Rainey Street",room_type:"Entire home/apt",price:238,rating:4.67,cafes:9,groceries:1,transit:6}
+  ];
+  var $=function(id){return document.getElementById(id)};
+  function esc(s){return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")}
+  function paint(text){
+    return esc(text).replace(/("(\\u[a-fA-F0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g,function(m){
+      var c="n";
+      if(m.charAt(0)==='"'){c=/:$/.test(m)?"k":"s"}
+      else if(m==="true"||m==="false"){c="b"}
+      else if(m==="null"){c="z"}
+      return '<span class="'+c+'">'+m+'</span>';
+    });
+  }
+  function chip(el,txtEl,cls,text){el.className="chip "+cls;txtEl.textContent=text}
+  function show(text,json){$("json").innerHTML=json?paint(text):esc(text)}
+
+  function send(){
+    var city=$("city").value.trim()||"Austin",max=$("max").value.trim();
+    var q="city="+encodeURIComponent(city);if(max)q+="&maxPrice="+encodeURIComponent(max);
+    var path="/api/search.json?"+q;
+    $("req").innerHTML="<b>GET</b> "+esc(path);
+    $("rawLink").href=path;
+    show("Sending request...",false);chip($("status"),$("statusText"),"","Waiting");
+    var t0=performance.now(),ctl=new AbortController(),timer=setTimeout(function(){ctl.abort()},6000);
+    fetch(path,{signal:ctl.signal}).then(function(res){
+      var ms=Math.round(performance.now()-t0);$("timeText").textContent=ms+" ms";
+      return res.text().then(function(body){
+        if(!res.ok)throw new Error(res.status===404?"Server 2 is not connected yet":"Server 2 returned "+res.status);
+        var data;try{data=JSON.parse(body)}catch(e){throw new Error("Server 2 did not return JSON")}
+        $("notice").hidden=true;
+        chip($("status"),$("statusText"),"ok",res.status+" OK");
+        show(JSON.stringify(data,null,2),true);
+      });
+    }).catch(function(err){
+      var why=err.name==="AbortError"?"Server 2 did not respond in time":err.message;
+      $("timeText").textContent=Math.round(performance.now()-t0)+" ms";
+      var shown=SAMPLE.filter(function(l){return !max||l.price<=+max});
+      chip($("status"),$("statusText"),"wait","Sample response");
+      $("notice").hidden=false;
+      $("notice").textContent=why.trim()+". Showing a sample response in the format the API will return once Server 2 is connected.";
+      show(JSON.stringify(shown,null,2),true);
+    }).then(function(){clearTimeout(timer)});
+  }
+  $("askForm").addEventListener("submit",function(e){e.preventDefault();send()});
+  send();
+})();
+</script>
+</body>
+</html>

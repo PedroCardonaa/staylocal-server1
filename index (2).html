@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>StayLocal | Find a stay, then see what is a short walk away</title>
+<meta name="description" content="Search Airbnb listings and see the cafes, grocery stores, and transit stops within 500 meters of each one.">
+<style>
+:root{
+  --paper:#F1F5F7; --card:#FFFFFF; --ink:#13232B; --muted:#566872; --line:#D9E2E7;
+  --coral:#EF4458; --coral-dark:#D6314A; --cafe:#D9832A; --grocery:#2B9A68; --transit:#3566CF;
+  --focus:#3566CF; --map:#E6EEF1;
+  font-family:"Avenir Next","Segoe UI Variable Display","Segoe UI",system-ui,-apple-system,"Helvetica Neue",Arial,sans-serif;
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--paper);color:var(--ink);font-size:16px;line-height:1.5}
+a{color:inherit}
+.wrap{max-width:1120px;margin:0 auto;padding:0 24px}
+:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+
+/* top bar */
+.bar{border-bottom:1px solid var(--line);background:#fff}
+.bar .wrap{display:flex;align-items:center;justify-content:space-between;height:64px}
+.brand{display:flex;align-items:center;gap:10px;text-decoration:none;font-weight:800;font-size:21px;letter-spacing:-.02em}
+.brand svg{display:block}
+.nav{display:flex;gap:6px}
+.nav a{text-decoration:none;font-weight:650;font-size:15px;padding:8px 14px;border-radius:999px;color:var(--muted)}
+.nav a[aria-current="page"]{background:var(--ink);color:#fff}
+.nav a:not([aria-current="page"]):hover{background:var(--paper);color:var(--ink)}
+
+/* hero + search */
+.hero{padding-top:52px;padding-bottom:30px}
+h1{margin:0 0 14px;font-size:clamp(32px,5.4vw,56px);line-height:1.04;letter-spacing:-.03em;font-weight:800;max-width:15ch;text-wrap:balance}
+.lede{margin:0 0 30px;max-width:56ch;color:var(--muted);font-size:18px}
+.search{display:grid;grid-template-columns:1.25fr 1.25fr 1fr auto;background:#fff;border:1px solid var(--line);border-radius:20px;box-shadow:0 10px 30px rgba(19,35,43,.09);overflow:hidden}
+.field{display:flex;flex-direction:column;gap:5px;padding:13px 22px 14px;border-right:1px solid var(--line);min-width:0}
+.field:focus-within{box-shadow:inset 0 0 0 2px var(--focus)}
+.field label{font-size:13px;font-weight:700;color:var(--muted)}
+.field input[type=text],.field select{border:0;padding:0;margin:0;font:inherit;font-size:18px;font-weight:650;color:var(--ink);background:transparent;outline:none;width:100%;min-width:0}
+.field select{cursor:pointer}
+.priceline{display:flex;align-items:center;gap:12px}
+.priceline input{flex:1;accent-color:var(--coral);min-width:0}
+.priceline output{font-weight:700;font-size:16px;min-width:54px;text-align:right;font-variant-numeric:tabular-nums}
+.go{margin:9px;padding:0 28px;border:0;border-radius:13px;background:var(--coral);color:#fff;font:inherit;font-weight:750;font-size:17px;cursor:pointer}
+.go:hover{background:var(--coral-dark)}
+
+/* results header */
+.results{padding-top:12px;padding-bottom:56px}
+.toolbar{display:flex;flex-wrap:wrap;align-items:center;gap:14px 18px;margin:0 0 6px}
+.count{margin:0;font-size:22px;font-weight:780;letter-spacing:-.015em}
+.badge{display:inline-flex;align-items:center;gap:7px;padding:5px 12px;border-radius:999px;font-size:13px;font-weight:700;background:#fff;border:1px solid var(--line)}
+.badge i{width:8px;height:8px;border-radius:50%;background:var(--muted);display:block}
+.badge.live i{background:var(--grocery)}
+.badge.sample i{background:var(--cafe)}
+.sort{margin-left:auto;display:flex;align-items:center;gap:10px;font-size:14px;font-weight:650;color:var(--muted)}
+.sort select{font:inherit;font-weight:700;color:var(--ink);padding:8px 12px;border:1px solid var(--line);border-radius:10px;background:#fff}
+.key{margin:0 0 22px;color:var(--muted);font-size:14px}
+.notice{margin:0 0 20px;padding:12px 16px;border-radius:12px;background:#FFF6E8;border:1px solid #F1D9AE;font-size:15px}
+
+/* cards */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:22px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;overflow:hidden;display:flex;flex-direction:column}
+.map{display:block;width:100%;height:auto;background:var(--map)}
+.body{padding:15px 17px 17px;display:grid;gap:12px}
+.head{display:flex;justify-content:space-between;align-items:flex-start;gap:14px}
+.name{margin:0;font-size:17px;font-weight:720;line-height:1.28;letter-spacing:-.005em}
+.where{margin:3px 0 0;color:var(--muted);font-size:14px}
+.price{text-align:right;white-space:nowrap;line-height:1.25}
+.price b{display:block;font-size:20px;font-weight:800;font-variant-numeric:tabular-nums}
+.price span{font-size:13px;color:var(--muted)}
+.rating{display:inline-flex;align-items:center;gap:5px;font-weight:700;font-size:14px}
+.rating svg{display:block}
+.nearby{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding-top:13px;border-top:1px solid var(--line)}
+.stat{display:flex;align-items:baseline;gap:6px;font-size:14px;color:var(--muted)}
+.stat b{font-size:18px;color:var(--ink);font-variant-numeric:tabular-nums}
+.stat i{width:9px;height:9px;border-radius:50%;display:inline-block;transform:translateY(0)}
+.pending{color:var(--muted);font-size:14px;padding-top:13px;border-top:1px solid var(--line)}
+
+/* the one moment: rings draw in */
+.r500,.r250{stroke-dasharray:var(--len);stroke-dashoffset:var(--len);animation:draw .9s cubic-bezier(.3,.7,.2,1) forwards}
+.r250{animation-delay:.15s}
+.pt{opacity:0;animation:pop .35s ease-out forwards}
+@keyframes draw{to{stroke-dashoffset:0}}
+@keyframes pop{from{opacity:0;transform:scale(.4)}to{opacity:1;transform:scale(1)}}
+.pt{transform-box:fill-box;transform-origin:center}
+
+/* loading and empty */
+.skel{height:318px;border-radius:16px;border:1px solid var(--line);background:linear-gradient(100deg,#fff 30%,#EEF3F5 50%,#fff 70%);background-size:300% 100%;animation:sheen 1.4s linear infinite}
+@keyframes sheen{from{background-position:100% 0}to{background-position:0 0}}
+.empty{padding:44px 24px;border:1px dashed #B9C7CE;border-radius:16px;text-align:center;color:var(--muted);background:#fff}
+.empty strong{display:block;color:var(--ink);font-size:19px;margin-bottom:6px}
+
+/* tiers */
+.tiers{border-top:1px solid var(--line);background:#fff}
+.tiers .wrap{display:flex;flex-wrap:wrap;gap:12px 28px;padding-top:18px;padding-bottom:18px;font-size:14px;color:var(--muted)}
+.tier{display:flex;align-items:center;gap:8px}
+.tier i{width:9px;height:9px;border-radius:50%;background:#B9C7CE;display:block}
+.tier.ok i{background:var(--grocery)}
+.tier.wait i{background:var(--cafe)}
+.credit{width:100%;font-size:13px}
+
+@media (max-width:860px){
+  .search{grid-template-columns:1fr}
+  .field{border-right:0;border-bottom:1px solid var(--line)}
+  .go{margin:14px;padding:15px}
+  .sort{margin-left:0}
+  .hero{padding-top:34px}
+}
+@media (prefers-reduced-motion:reduce){
+  .r500,.r250,.pt{animation:none;stroke-dashoffset:0;opacity:1}
+  .skel{animation:none}
+}
+</style>
+</head>
+<body>
+<header class="bar">
+  <div class="wrap">
+    <a class="brand" href="index.html" aria-label="StayLocal home">
+      <svg width="30" height="30" viewBox="0 0 30 30" aria-hidden="true">
+        <circle cx="15" cy="15" r="13" fill="none" stroke="#13232B" stroke-width="2" stroke-dasharray="3 3"/>
+        <circle cx="15" cy="15" r="7.5" fill="none" stroke="#13232B" stroke-width="2"/>
+        <circle cx="15" cy="15" r="3.6" fill="#EF4458"/>
+      </svg>
+      StayLocal
+    </a>
+    <nav class="nav" aria-label="Main">
+      <a href="index.html" aria-current="page">Search</a>
+      <a href="api.html">API</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <section class="hero wrap">
+    <h1>Find a stay, then see what&rsquo;s a short walk away</h1>
+    <p class="lede">Search listings by city. Every result shows the cafes, grocery stores, and transit stops within 500 meters.</p>
+    <form class="search" id="searchForm" autocomplete="off">
+      <div class="field">
+        <label for="city">City</label>
+        <input id="city" name="city" type="text" value="Austin" placeholder="Try Austin" required>
+      </div>
+      <div class="field">
+        <label for="price">Price limit per night</label>
+        <div class="priceline">
+          <input id="price" name="price" type="range" min="50" max="500" step="10" value="500">
+          <output id="priceOut" for="price">No limit</output>
+        </div>
+      </div>
+      <div class="field">
+        <label for="type">Room type</label>
+        <select id="type" name="type">
+          <option value="">Any type</option>
+          <option value="Entire home/apt">Entire home</option>
+          <option value="Private room">Private room</option>
+          <option value="Shared room">Shared room</option>
+          <option value="Hotel room">Hotel room</option>
+        </select>
+      </div>
+      <button class="go" type="submit">Search stays</button>
+    </form>
+  </section>
+
+  <section class="results wrap" aria-labelledby="count">
+    <div class="toolbar">
+      <h2 class="count" id="count" role="status" aria-live="polite">Loading stays</h2>
+      <span class="badge" id="badge"><i></i><span id="badgeText">Checking API</span></span>
+      <label class="sort">Sort by
+        <select id="sort">
+          <option value="rec">Best match</option>
+          <option value="walk">Most walkable</option>
+          <option value="low">Price, low to high</option>
+          <option value="high">Price, high to low</option>
+          <option value="rate">Highest rated</option>
+        </select>
+      </label>
+    </div>
+    <p class="key">The inner ring is a 250 meter walk and the outer ring is 500 meters. Dots mark cafes, grocery stores, and transit stops.</p>
+    <p class="notice" id="notice" hidden></p>
+    <div class="grid" id="grid" aria-busy="true"></div>
+  </section>
+</main>
+
+<footer class="tiers">
+  <div class="wrap">
+    <span class="tier ok" id="t1"><i></i>Web server (Server 1) online</span>
+    <span class="tier" id="t2"><i></i><span id="t2text">API server (Server 2) checking</span></span>
+    <span class="tier" id="t3"><i></i><span id="t3text">Database (Server 3) reached through Server 2</span></span>
+    <span class="credit">Listings from Inside Airbnb. Places from OpenStreetMap contributors.</span>
+  </div>
+</footer>
+
+<script>
+(function(){
+  var SAMPLE=[
+    {id:"s1",name:"Sunny bungalow near Zilker Park",neighbourhood:"Zilker",room_type:"Entire home/apt",price:189,rating:4.92,cafes:7,groceries:2,transit:3},
+    {id:"s2",name:"Garden room with a private entrance",neighbourhood:"East Cesar Chavez",room_type:"Private room",price:96,rating:4.81,cafes:11,groceries:3,transit:4},
+    {id:"s3",name:"Modern loft above Rainey Street",neighbourhood:"Rainey Street",room_type:"Entire home/apt",price:238,rating:4.67,cafes:9,groceries:1,transit:6},
+    {id:"s4",name:"Quiet two-bedroom in Hyde Park",neighbourhood:"Hyde Park",room_type:"Entire home/apt",price:164,rating:4.95,cafes:5,groceries:2,transit:2},
+    {id:"s5",name:"Cozy studio by Mueller Lake",neighbourhood:"Mueller",room_type:"Entire home/apt",price:121,rating:4.74,cafes:4,groceries:2,transit:1},
+    {id:"s6",name:"Room in a Bouldin Creek duplex",neighbourhood:"Bouldin Creek",room_type:"Private room",price:78,rating:4.58,cafes:8,groceries:1,transit:2},
+    {id:"s7",name:"Tree-lined cottage in Travis Heights",neighbourhood:"Travis Heights",room_type:"Entire home/apt",price:176,rating:4.88,cafes:6,groceries:2,transit:3},
+    {id:"s8",name:"Clarksville carriage house",neighbourhood:"Clarksville",room_type:"Entire home/apt",price:205,rating:4.9,cafes:10,groceries:3,transit:5},
+    {id:"s9",name:"Shared loft near North Loop",neighbourhood:"North Loop",room_type:"Shared room",price:54,rating:4.42,cafes:3,groceries:1,transit:2}
+  ];
+
+  var $=function(id){return document.getElementById(id)};
+  var form=$("searchForm"), cityEl=$("city"), priceEl=$("price"), priceOut=$("priceOut"),
+      typeEl=$("type"), sortEl=$("sort"), grid=$("grid"), countEl=$("count"),
+      badge=$("badge"), badgeText=$("badgeText"), notice=$("notice");
+  var cache=[], mode="sample", shownCity="Austin";
+
+  function esc(s){return String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;")}
+
+  /* ---- normalise whatever Server 2 sends ---- */
+  function pick(o,keys){for(var i=0;i<keys.length;i++){var v=o[keys[i]];if(v!==undefined&&v!==null&&v!=="")return v}return undefined}
+  function num(v){if(v===undefined)return undefined;var n=parseFloat(String(v).replace(/[^0-9.\-]/g,""));return isNaN(n)?undefined:n}
+  function normalize(o,idx){
+    var near=o.nearby||o.places||o.walkable||{};
+    var cafes=num(pick(o,["cafes","cafe_count","cafes_500m"])); if(cafes===undefined)cafes=num(pick(near,["cafes","cafe"]));
+    var groc=num(pick(o,["groceries","grocery","grocery_count","grocery_stores"])); if(groc===undefined)groc=num(pick(near,["groceries","grocery"]));
+    var trans=num(pick(o,["transit","transit_stops","transit_count"])); if(trans===undefined)trans=num(pick(near,["transit","transit_stops"]));
+    var rating=num(pick(o,["rating","review_scores_rating","avg_rating"]));
+    if(rating!==undefined&&rating>5)rating=rating/20;
+    return {
+      id:String(pick(o,["id","listing_id"])||("n"+idx)),
+      name:String(pick(o,["name","listing_name","title"])||"Listing "+(idx+1)),
+      hood:String(pick(o,["neighbourhood_cleansed","neighbourhood","neighborhood","area"])||""),
+      type:String(pick(o,["room_type","type"])||""),
+      price:num(pick(o,["price","price_per_night","nightly_price"])),
+      rating:rating,
+      cafes:cafes, groc:groc, trans:trans,
+      has:(cafes!==undefined||groc!==undefined||trans!==undefined)
+    };
+  }
+
+  /* ---- the walk map: the one distinctive element ---- */
+  function hash(s){var h=2166136261;for(var i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,16777619)}return h>>>0}
+  function rng(seed){return function(){seed|=0;seed=seed+0x6D2B79F5|0;var t=Math.imul(seed^seed>>>15,1|seed);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+  function mapSVG(l,i){
+    var W=320,H=176,cx=160,cy=88,R5=70,R25=35,r=rng(hash(l.id+l.name)),s="";
+    s+='<svg class="map" viewBox="0 0 '+W+' '+H+'" role="img" aria-label="Walk map for '+esc(l.name)+'. ';
+    s+=l.has?(l.cafes||0)+' cafes, '+(l.groc||0)+' grocery stores, and '+(l.trans||0)+' transit stops within 500 meters.">':'Nearby places are not loaded yet.">';
+    s+='<rect width="'+W+'" height="'+H+'" fill="#E6EEF1"/>';
+    for(var p=0;p<2;p++){s+='<ellipse cx="'+(r()*W).toFixed(0)+'" cy="'+(r()*H).toFixed(0)+'" rx="'+(34+r()*40).toFixed(0)+'" ry="'+(18+r()*22).toFixed(0)+'" fill="#D3E8D8" transform="rotate('+(r()*60-30).toFixed(0)+' '+cx+' '+cy+')"/>'}
+    var tilt=r()*16-8;
+    s+='<g stroke="#FFFFFF" stroke-linecap="round" fill="none" transform="rotate('+tilt.toFixed(1)+' '+cx+' '+cy+')">';
+    for(var a=0;a<3;a++){var y=(a+0.5)*H/3+(r()*26-13);s+='<line x1="-40" y1="'+y.toFixed(0)+'" x2="'+(W+40)+'" y2="'+y.toFixed(0)+'" stroke-width="'+(a===1?9:6)+'"/>'}
+    for(var b=0;b<4;b++){var x=(b+0.5)*W/4+(r()*30-15);s+='<line x1="'+x.toFixed(0)+'" y1="-40" x2="'+x.toFixed(0)+'" y2="'+(H+40)+'" stroke-width="'+(b===1?9:5)+'"/>'}
+    s+='</g>';
+    var L5=(2*Math.PI*R5).toFixed(0),L25=(2*Math.PI*R25).toFixed(0),d=(i%6)*0.06;
+    s+='<circle class="r500" style="--len:'+L5+';animation-delay:'+d+'s" cx="'+cx+'" cy="'+cy+'" r="'+R5+'" fill="rgba(53,102,207,.07)" stroke="#3566CF" stroke-width="1.6"/>';
+    s+='<circle class="r250" style="--len:'+L25+';animation-delay:'+(0.15+d)+'s" cx="'+cx+'" cy="'+cy+'" r="'+R25+'" fill="none" stroke="#3566CF" stroke-width="1.2" stroke-opacity=".6"/>';
+    s+='<text x="'+cx+'" y="'+(cy-R5-3)+'" text-anchor="middle" font-size="9.5" font-weight="700" fill="#3566CF" paint-order="stroke" stroke="#E6EEF1" stroke-width="3">500 m</text>';
+    s+='<text x="'+cx+'" y="'+(cy+R25+11)+'" text-anchor="middle" font-size="9" font-weight="700" fill="#3566CF" paint-order="stroke" stroke="#E6EEF1" stroke-width="3">250 m</text>';
+    if(l.has){
+      var placed=[{x:cx,y:cy,r:12},{x:cx,y:cy+R25+7,r:17}],cats=[["#D9832A",l.cafes||0],["#2B9A68",l.groc||0],["#3566CF",l.trans||0]],n=0;
+      for(var c=0;c<cats.length;c++){
+        var total=Math.min(cats[c][1],14);
+        for(var k=0;k<total;k++){
+          var px=0,py=0,ok=false;
+          for(var t=0;t<30&&!ok;t++){
+            var ang=r()*Math.PI*2,rad=14+Math.sqrt(r())*(R5-18);
+            px=cx+Math.cos(ang)*rad;py=cy+Math.sin(ang)*rad;ok=true;
+            for(var q=0;q<placed.length;q++){var dx=placed[q].x-px,dy=placed[q].y-py;if(dx*dx+dy*dy<(placed[q].r||9)*(placed[q].r||9)){ok=false;break}}
+          }
+          placed.push({x:px,y:py,r:9});
+          s+='<circle class="pt" style="animation-delay:'+(0.5+n*0.03+d).toFixed(2)+'s" cx="'+px.toFixed(1)+'" cy="'+py.toFixed(1)+'" r="4.4" fill="'+cats[c][0]+'" stroke="#fff" stroke-width="1.6"/>';
+          n++;
+        }
+      }
+    }
+    s+='<circle cx="'+cx+'" cy="'+cy+'" r="8.5" fill="#EF4458" stroke="#fff" stroke-width="3"/><circle cx="'+cx+'" cy="'+cy+'" r="2.6" fill="#fff"/>';
+    return s+'</svg>';
+  }
+
+  var STAR='<svg width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><path fill="#13232B" d="M12 2.5l2.9 6.1 6.6.8-4.9 4.6 1.3 6.6L12 17.3 6.1 20.6l1.3-6.6L2.5 9.4l6.6-.8z"/></svg>';
+  function typeLabel(t){return t==="Entire home/apt"?"Entire home":t}
+  function card(l,i){
+    var price=l.price!==undefined?'<b>$'+Math.round(l.price)+'</b><span>per night</span>':'<span>Price not listed</span>';
+    var rating=l.rating!==undefined?'<span class="rating">'+STAR+l.rating.toFixed(2)+'</span>':'';
+    var where=[l.hood,typeLabel(l.type)].filter(Boolean).join(", ");
+    var near=l.has?
+      '<div class="nearby"><span class="stat"><i style="background:var(--cafe)"></i><b>'+(l.cafes||0)+'</b>cafes</span>'+
+      '<span class="stat"><i style="background:var(--grocery)"></i><b>'+(l.groc||0)+'</b>grocery</span>'+
+      '<span class="stat"><i style="background:var(--transit)"></i><b>'+(l.trans||0)+'</b>transit</span></div>':
+      '<div class="pending">Nearby places are not loaded for this stay yet.</div>';
+    return '<article class="card">'+mapSVG(l,i)+'<div class="body"><div class="head"><div><h3 class="name">'+esc(l.name)+'</h3><p class="where">'+esc(where)+'</p></div><div class="price">'+price+'</div></div>'+rating+near+'</div></article>';
+  }
+
+  /* ---- filter, sort, draw ---- */
+  function walkScore(l){return(l.cafes||0)+(l.groc||0)+(l.trans||0)}
+  function visible(){
+    var max=+priceEl.value,type=typeEl.value;
+    var list=cache.filter(function(l){
+      if(max<500&&l.price!==undefined&&l.price>max)return false;
+      if(type&&l.type&&l.type!==type)return false;
+      return true;
+    });
+    var s=sortEl.value;
+    if(s==="walk")list.sort(function(a,b){return walkScore(b)-walkScore(a)});
+    if(s==="low")list.sort(function(a,b){return(a.price||0)-(b.price||0)});
+    if(s==="high")list.sort(function(a,b){return(b.price||0)-(a.price||0)});
+    if(s==="rate")list.sort(function(a,b){return(b.rating||0)-(a.rating||0)});
+    return list;
+  }
+  function draw(){
+    var list=visible();
+    grid.setAttribute("aria-busy","false");
+    if(!list.length){
+      grid.innerHTML='<div class="empty" style="grid-column:1/-1"><strong>No stays match these filters</strong>Raise the price limit or choose another room type.</div>';
+      countEl.textContent="0 stays";return;
+    }
+    grid.innerHTML=list.map(card).join("");
+    countEl.textContent=mode==="live"?list.length+(list.length===1?" stay in ":" stays in ")+shownCity:list.length+" sample "+(list.length===1?"stay":"stays");
+  }
+  function setBadge(m,text){badge.className="badge "+m;badgeText.textContent=text}
+  function setTier(el,textEl,cls,text){el.className="tier "+cls;textEl.textContent=text}
+  function loading(){
+    grid.setAttribute("aria-busy","true");
+    var s="";for(var i=0;i<6;i++)s+='<div class="skel" aria-hidden="true"></div>';
+    grid.innerHTML=s;countEl.textContent="Loading stays";
+  }
+
+  /* ---- talk to Server 2 ---- */
+  function load(){
+    var city=cityEl.value.trim()||"Austin";shownCity=city;loading();
+    var q="city="+encodeURIComponent(city);
+    if(+priceEl.value<500)q+="&maxPrice="+priceEl.value;
+    var ctl=new AbortController(),timer=setTimeout(function(){ctl.abort()},6000);
+    fetch("/api/search.json?"+q,{signal:ctl.signal}).then(function(res){
+      if(!res.ok)throw new Error("Server 2 returned "+res.status);
+      return res.json();
+    }).then(function(data){
+      var list=Array.isArray(data)?data:(data.listings||data.results||data.data||[]);
+      if(!Array.isArray(list))throw new Error("Server 2 sent an unexpected format");
+      cache=list.map(normalize);mode="live";notice.hidden=true;
+      setBadge("live","Live from Server 2");
+      setTier($("t2"),$("t2text"),"ok","API server (Server 2) connected");
+      setTier($("t3"),$("t3text"),"ok","Database (Server 3) reached through Server 2");
+      draw();
+    }).catch(function(err){
+      var why=err.name==="AbortError"?"Server 2 did not respond in time":(err instanceof SyntaxError?"Server 2 did not return JSON":(/returned 404/.test(err.message)?"Server 2 is not connected yet":err.message));
+      cache=SAMPLE.map(normalize);mode="sample";
+      setBadge("sample","Sample data");
+      notice.hidden=false;notice.textContent=why+". These are sample stays in the same format the API will return. Live results appear once Server 2 is connected.";
+      setTier($("t2"),$("t2text"),"wait","API server (Server 2) not connected yet");
+      setTier($("t3"),$("t3text"),"","Database (Server 3) reached through Server 2");
+      draw();
+    }).then(function(){clearTimeout(timer)});
+  }
+
+  function showPrice(){priceOut.textContent=+priceEl.value>=500?"No limit":"$"+priceEl.value}
+  priceEl.addEventListener("input",function(){showPrice();if(cache.length)draw()});
+  typeEl.addEventListener("change",function(){if(cache.length)draw()});
+  sortEl.addEventListener("change",function(){if(cache.length)draw()});
+  form.addEventListener("submit",function(e){e.preventDefault();load()});
+  showPrice();load();
+})();
+</script>
+</body>
+</html>
